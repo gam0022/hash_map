@@ -15,16 +15,19 @@ static VALUE
 rb_hash_collect(VALUE self)
 {
   VALUE new_hash, ary;
-  VALUE pear, key, val;
-  long i;
+  VALUE key, val;
+  VALUE *ary_ptr, *pear_ptr;
+  long i, l;
 
   new_hash = rb_funcall(rb_cHash, id_new, 0);
   ary      = rb_funcall(self, id_to_a, 0 );
+  ary_ptr  = RARRAY_PTR(ary);
+  l        = RARRAY_LEN(ary);
 
-  for (i=0; i<RARRAY_LEN(ary); ++i) {
-    pear = rb_funcall(ary,  id_at, 1, INT2FIX(i));
-    key  = rb_funcall(pear, id_at, 1, ZERO);
-    val  = rb_funcall(pear, id_at, 1, ONE);
+  for (i=0; i<l; ++i) {
+    pear_ptr = RARRAY_PTR(ary_ptr[i]);
+    key  = pear_ptr[0];
+    val  = pear_ptr[1];
     rb_funcall(new_hash, id_aset, 2, key, rb_yield(val));
   }
 
@@ -42,15 +45,18 @@ static VALUE
 rb_hash_collect_bang(VALUE self)
 {
   VALUE ary;
-  VALUE pear, key, val;
-  long i;
+  VALUE key, val;
+  VALUE *ary_ptr, *pear_ptr;
+  long i, l;
 
-  ary = rb_funcall(self, id_to_a, 0 );
+  ary      = rb_funcall(self, id_to_a, 0 );
+  ary_ptr  = RARRAY_PTR(ary);
+  l        = RARRAY_LEN(ary);
 
-  for (i=0; i<RARRAY_LEN(ary); ++i) {
-    pear = rb_funcall(ary,  id_at, 1, INT2FIX(i));
-    key  = rb_funcall(pear, id_at, 1, ZERO);
-    val  = rb_funcall(pear, id_at, 1, ONE);
+  for (i=0; i<l; ++i) {
+    pear_ptr = RARRAY_PTR(ary_ptr[i]);
+    key  = pear_ptr[0];
+    val  = pear_ptr[1];
     rb_funcall(self, id_aset, 2, key, rb_yield(val));
   }
 
@@ -64,14 +70,9 @@ void Init_hash_map(void)
   // CONSTS
   //
 
-  id_at   = rb_intern("at");
   id_new  = rb_intern("new");
   id_to_a = rb_intern("to_a");
   id_aset = rb_intern("[]=");
-
-  ZERO = INT2FIX(0);
-  ONE  = INT2FIX(1);
-
 
   rb_define_method(rb_cHash, "map_to_hash", rb_hash_collect, 0);
   rb_define_method(rb_cHash, "collect_to_hash", rb_hash_collect, 0);
